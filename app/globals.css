@@ -115,6 +115,29 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Added cursor pointer styles for all clickable elements */
+/* Clickable elements cursor styles */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="file"],
+select,
+[role="button"],
+[tabindex="0"],
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+/* Ensure disabled elements show default cursor */
+button:disabled,
+input:disabled,
+select:disabled,
+[disabled] {
+  cursor: not-allowed !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

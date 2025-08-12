@@ -1,6 +1,7 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
+import { Mail, Phone } from "lucide-react"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -21,6 +22,9 @@ import {
   Calendar,
   LogOut,
   FileText,
+  TrendingUp,
+  Award,
+  Zap,
 } from "lucide-react"
 
 // Mock data for demonstration - in a real app, this would come from a database
@@ -64,52 +68,49 @@ export default function AdminPage() {
 
       setIsAuthenticated(true)
 
-      const mockApplications = [
-        {
-          id: 1,
-          fullName: "John Doe",
-          email: "john@example.com",
-          phone: "+2348123456789",
-          address: "123 Lagos Street, Victoria Island, Lagos",
-          course: "Computer Basics",
-          experience: "Beginner",
-          appliedDate: "2024-01-15",
-          status: "Pending",
-          paymentStatus: "Pending",
-        },
-        {
-          id: 2,
-          fullName: "Jane Smith",
-          email: "jane@example.com",
-          phone: "+2348987654321",
-          address: "456 Abuja Road, Garki, FCT",
-          course: "Microsoft Office",
-          experience: "Intermediate",
-          appliedDate: "2024-01-14",
-          status: "Approved",
-          paymentStatus: "Paid",
-        },
-        {
-          id: 3,
-          fullName: "David Johnson",
-          email: "david@example.com",
-          phone: "+2348555666777",
-          address: "789 Port Harcourt Avenue, GRA, Rivers State",
-          course: "Graphics Design",
-          experience: "Beginner",
-          appliedDate: "2024-01-13",
-          status: "Pending",
-          paymentStatus: "Pending",
-        },
-      ]
+      const loadData = () => {
+        // Load enrollments from localStorage or API
+        const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]")
+        const bookings = JSON.parse(localStorage.getItem("bookings") || "[]")
 
-      setApplications(mockApplications)
+        // Combine enrollments and bookings into applications
+        const combinedApplications = [
+          ...enrollments.map((enrollment) => ({
+            id: `enrollment_${enrollment.id || Date.now()}`,
+            fullName: enrollment.fullName,
+            email: enrollment.email,
+            phone: enrollment.phone,
+            course: enrollment.course,
+            address: enrollment.address,
+            type: "Course Enrollment",
+            status: enrollment.status || "Pending",
+            paymentStatus: enrollment.paymentStatus || "Pending",
+            appliedDate: enrollment.appliedDate || new Date().toLocaleDateString(),
+            appliedTime: enrollment.appliedTime || new Date().toLocaleTimeString(),
+          })),
+          ...bookings.map((booking) => ({
+            id: `booking_${booking.id || Date.now()}`,
+            fullName: booking.fullName,
+            email: booking.email,
+            phone: booking.phone,
+            course: booking.serviceType,
+            address: booking.address,
+            type: "Service Booking",
+            status: booking.status || "Pending",
+            paymentStatus: booking.paymentStatus || "Pending",
+            appliedDate: booking.appliedDate || new Date().toLocaleDateString(),
+            appliedTime: booking.appliedTime || new Date().toLocaleTimeString(),
+          })),
+        ]
 
-      const savedLogs = localStorage.getItem("actionLogs")
-      if (savedLogs) {
-        setActionLogs(JSON.parse(savedLogs))
+        setApplications(combinedApplications)
+
+        // Load action logs
+        const logs = JSON.parse(localStorage.getItem("actionLogs") || "[]")
+        setActionLogs(logs)
       }
 
+      loadData()
       setIsLoading(false)
     }
 
@@ -118,10 +119,17 @@ export default function AdminPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading admin dashboard...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-600 border-t-blue-500 mx-auto mb-6"></div>
+            <div
+              className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-green-500 animate-spin mx-auto"
+              style={{ animationDelay: "0.5s", animationDuration: "1.5s" }}
+            ></div>
+          </div>
+          <p className="text-slate-300 text-lg font-medium">Loading admin dashboard...</p>
+          <p className="text-slate-500 text-sm mt-2">Preparing your workspace</p>
         </div>
       </div>
     )
@@ -132,9 +140,13 @@ export default function AdminPage() {
   }
 
   const saveActionLog = (log) => {
-    const updatedLogs = [...actionLogs, log]
+    const timestamp = new Date().getTime()
+    const logKey = `adminLog_${timestamp}`
+    const updatedLogs = [...actionLogs, { ...log, logId: logKey }]
     setActionLogs(updatedLogs)
-    localStorage.setItem("actionLogs", JSON.stringify(updatedLogs))
+
+    localStorage.setItem("newAdminLogs", JSON.stringify(updatedLogs))
+    localStorage.setItem(logKey, JSON.stringify(log))
   }
 
   const sendNotification = async (candidate, action) => {
@@ -160,60 +172,62 @@ export default function AdminPage() {
     }
   }
 
-  const handleApprove = async (id) => {
-    const candidate = applications.find((app) => app.id === id)
-    if (!candidate) return
-
-    const updatedApplications = applications.map((app) => (app.id === id ? { ...app, status: "Approved" } : app))
+  const handleApprove = (applicationId) => {
+    const updatedApplications = applications.map((app) =>
+      app.id === applicationId ? { ...app, status: "Approved", paymentStatus: "Paid" } : app,
+    )
     setApplications(updatedApplications)
 
-    const actionLog = {
-      id: Date.now().toString(),
-      candidateId: id,
-      candidateName: candidate.fullName,
-      candidateEmail: candidate.email,
-      candidatePhone: candidate.phone,
-      candidateAddress: candidate.address,
-      serviceOrCourse: candidate.course,
-      enrollmentDate: candidate.appliedDate,
+    // Save back to appropriate storage
+    const enrollments = updatedApplications.filter((app) => app.type === "Course Enrollment")
+    const bookings = updatedApplications.filter((app) => app.type === "Service Booking")
+
+    localStorage.setItem("enrollments", JSON.stringify(enrollments))
+    localStorage.setItem("bookings", JSON.stringify(bookings))
+
+    const application = applications.find((app) => app.id === applicationId)
+    const log = {
+      id: Date.now(),
+      candidateName: application.fullName,
+      candidateEmail: application.email,
+      course: application.course,
       action: "Approved",
       actionDate: new Date().toLocaleDateString(),
       actionTime: new Date().toLocaleTimeString(),
-      details: `Candidate approved for ${candidate.course}`,
-      paymentStatus: candidate.paymentStatus,
-      performedBy: "Admin",
+      details: `Application approved for ${application.course}. Payment status updated to Paid.`,
+      paymentStatus: "Paid",
     }
 
-    saveActionLog(actionLog)
-    await sendNotification(candidate, "approved")
+    saveActionLog(log)
   }
 
-  const handleReject = async (id) => {
-    const candidate = applications.find((app) => app.id === id)
-    if (!candidate) return
-
-    const updatedApplications = applications.map((app) => (app.id === id ? { ...app, status: "Rejected" } : app))
+  const handleReject = (applicationId) => {
+    const updatedApplications = applications.map((app) =>
+      app.id === applicationId ? { ...app, status: "Rejected" } : app,
+    )
     setApplications(updatedApplications)
 
-    const actionLog = {
-      id: Date.now().toString(),
-      candidateId: id,
-      candidateName: candidate.fullName,
-      candidateEmail: candidate.email,
-      candidatePhone: candidate.phone,
-      candidateAddress: candidate.address,
-      serviceOrCourse: candidate.course,
-      enrollmentDate: candidate.appliedDate,
+    // Save back to appropriate storage
+    const enrollments = updatedApplications.filter((app) => app.type === "Course Enrollment")
+    const bookings = updatedApplications.filter((app) => app.type === "Service Booking")
+
+    localStorage.setItem("enrollments", JSON.stringify(enrollments))
+    localStorage.setItem("bookings", JSON.stringify(bookings))
+
+    const application = applications.find((app) => app.id === applicationId)
+    const log = {
+      id: Date.now(),
+      candidateName: application.fullName,
+      candidateEmail: application.email,
+      course: application.course,
       action: "Rejected",
       actionDate: new Date().toLocaleDateString(),
       actionTime: new Date().toLocaleTimeString(),
-      details: `Candidate rejected for ${candidate.course}`,
-      paymentStatus: candidate.paymentStatus,
-      performedBy: "Admin",
+      details: `Application rejected for ${application.course}. Reason: Did not meet requirements.`,
+      paymentStatus: application.paymentStatus,
     }
 
-    saveActionLog(actionLog)
-    await sendNotification(candidate, "rejected")
+    saveActionLog(log)
   }
 
   const updatePaymentStatus = (id, status) => {
@@ -245,6 +259,9 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     localStorage.removeItem("adminAuthenticated")
+    localStorage.removeItem("newAdminLogs")
+    const keys = Object.keys(localStorage).filter((key) => key.startsWith("adminLog_"))
+    keys.forEach((key) => localStorage.removeItem(key))
     router.push("/admin/login")
   }
 
@@ -356,319 +373,451 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">OPEYEMI TECHNOLOGY</h1>
-            <p className="text-gray-600">Admin Dashboard</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('/tech-background-dark.png')] bg-cover bg-center opacity-5"></div>
+      <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute bottom-20 right-20 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+      </div>
+
+      <div className="relative z-10 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-12">
+            <div className="space-y-3">
+              <h1 className="text-6xl font-black bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                OPEYEMI TECHNOLOGY
+              </h1>
+              <p className="text-2xl text-slate-400 font-light tracking-wide">Admin Dashboard</p>
+              <div className="flex items-center gap-3 text-sm text-slate-500">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>System Online</span>
+                </div>
+                <div className="w-px h-4 bg-slate-600"></div>
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-slate-400" />
+                  <span>Real-time Management</span>
+                </div>
+              </div>
+            </div>
+            <Button
+              onClick={handleLogout}
+              className="bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white border-0 shadow-xl transition-all duration-300 transform hover:scale-105 px-6 py-3"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </div>
-          <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2 bg-transparent">
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Applications</CardTitle>
-              <Users className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Pending</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Approved</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Rejected</CardTitle>
-              <XCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs value={currentView} onValueChange={setCurrentView} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="applications">Course Applications</TabsTrigger>
-            <TabsTrigger value="history">Approved Candidates History</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="applications" className="space-y-6">
-            <Card className="bg-white shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  Course Applications
-                </CardTitle>
-                <CardDescription>Manage student course applications</CardDescription>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <Card className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl border border-slate-700/50 shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 transform hover:-translate-y-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-300 tracking-wide">Total Applications</CardTitle>
+                <div className="p-3 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl border border-blue-500/20">
+                  <Users className="h-6 w-6 text-blue-400" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search by name, email, or course..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-full md:w-48">
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All Status</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Approved">Approved</SelectItem>
-                      <SelectItem value="Rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="text-4xl font-bold text-white mb-2">{stats.total}</div>
+                <div className="flex items-center text-xs text-slate-400">
+                  <TrendingUp className="h-3 w-3 mr-1 text-green-400" />
+                  <span>+12% from last month</span>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="space-y-4">
-                  {filteredApplications.map((app) => (
-                    <Card key={app.id} className="border-l-4 border-l-blue-500">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                              <h3 className="font-semibold text-lg">{app.fullName}</h3>
-                              <Badge
-                                variant={
-                                  app.status === "Approved"
-                                    ? "default"
-                                    : app.status === "Rejected"
-                                      ? "destructive"
-                                      : "secondary"
-                                }
-                              >
-                                {app.status}
-                              </Badge>
-                              <Badge variant={app.paymentStatus === "Paid" ? "default" : "outline"}>
-                                {app.paymentStatus}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-gray-600 space-y-1">
-                              <p>
-                                <strong>Email:</strong> {app.email}
-                              </p>
-                              <p>
-                                <strong>Phone:</strong> {app.phone}
-                              </p>
-                              <p>
-                                <strong>Course:</strong> {app.course}
-                              </p>
-                              <p>
-                                <strong>Experience:</strong> {app.experience}
-                              </p>
-                              <p>
-                                <strong>Applied:</strong> {app.appliedDate}
-                              </p>
-                            </div>
-                          </div>
+            <Card className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl border border-slate-700/50 shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 transform hover:-translate-y-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-300 tracking-wide">Pending Review</CardTitle>
+                <div className="p-3 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl border border-orange-500/20">
+                  <Clock className="h-6 w-6 text-orange-400" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold text-white mb-2">{stats.pending}</div>
+                <div className="flex items-center text-xs text-slate-400">
+                  <Clock className="h-3 w-3 mr-1 text-orange-400" />
+                  <span>Awaiting action</span>
+                </div>
+              </CardContent>
+            </Card>
 
-                          <div className="flex flex-col gap-2">
-                            {app.status === "Pending" && (
-                              <div className="flex gap-2">
+            <Card className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl border border-slate-700/50 shadow-2xl hover:shadow-green-500/10 transition-all duration-500 transform hover:-translate-y-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-300 tracking-wide">Approved</CardTitle>
+                <div className="p-3 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl border border-green-500/20">
+                  <CheckCircle className="h-6 w-6 text-green-400" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold text-white mb-2">{stats.approved}</div>
+                <div className="flex items-center text-xs text-slate-400">
+                  <Award className="h-3 w-3 mr-1 text-green-400" />
+                  <span>Successfully processed</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl border border-slate-700/50 shadow-2xl hover:shadow-red-500/10 transition-all duration-500 transform hover:-translate-y-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-slate-300 tracking-wide">Rejected</CardTitle>
+                <div className="p-3 bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-xl border border-red-500/20">
+                  <XCircle className="h-6 w-6 text-red-400" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold text-white mb-2">{stats.rejected}</div>
+                <div className="flex items-center text-xs text-slate-400">
+                  <XCircle className="h-3 w-3 mr-1 text-red-400" />
+                  <span>Declined applications</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Tabs value={currentView} onValueChange={setCurrentView} className="space-y-8">
+            <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-slate-800/80 to-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-2 shadow-xl">
+              <TabsTrigger
+                value="applications"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/20 data-[state=active]:to-blue-600/20 data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-blue-500/30 text-slate-400 hover:text-slate-200 transition-all duration-300 rounded-xl py-3 font-medium"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Applications
+              </TabsTrigger>
+              <TabsTrigger
+                value="history"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/20 data-[state=active]:to-green-600/20 data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-green-500/30 text-slate-400 hover:text-slate-200 transition-all duration-300 rounded-xl py-3 font-medium"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                History
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="applications" className="space-y-8">
+              <Card className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl border border-slate-700/50 shadow-2xl">
+                <CardHeader className="bg-gradient-to-r from-slate-800/90 to-slate-800/70 rounded-t-2xl border-b border-slate-700/50">
+                  <CardTitle className="flex items-center gap-4 text-white text-2xl font-bold">
+                    <div className="p-3 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl border border-blue-500/20">
+                      <BookOpen className="h-7 w-7 text-blue-400" />
+                    </div>
+                    Course Applications
+                    <Badge className="bg-gradient-to-r from-slate-700 to-slate-600 text-slate-200 border border-slate-600/50 px-3 py-1">
+                      {applications.length} Total
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 text-base mt-2">
+                    Manage and review student course applications with advanced filtering and real-time updates
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="flex flex-col md:flex-row gap-6 mb-8">
+                    <div className="flex-1">
+                      <div className="relative group">
+                        <Search className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
+                        <Input
+                          placeholder="Search by name, email, or course..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-12 h-14 bg-gradient-to-r from-slate-800/50 to-slate-800/30 backdrop-blur-lg border border-slate-700/50 text-white placeholder:text-slate-400 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 rounded-xl transition-all duration-300"
+                        />
+                      </div>
+                    </div>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="w-full md:w-64 h-14 bg-gradient-to-r from-slate-800/50 to-slate-800/30 backdrop-blur-lg border border-slate-700/50 text-white rounded-xl">
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl">
+                        <SelectItem value="All">All Status</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Approved">Approved</SelectItem>
+                        <SelectItem value="Rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-6">
+                    {filteredApplications.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="p-4 bg-slate-800/50 rounded-lg inline-block mb-4">
+                          <BookOpen className="h-12 w-12 text-gray-400 mx-auto" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">No Applications Found</h3>
+                        <p className="text-gray-400">
+                          {searchTerm || filterStatus !== "All"
+                            ? "No applications match your current filters."
+                            : "No course applications have been submitted yet."}
+                        </p>
+                      </div>
+                    ) : (
+                      filteredApplications.map((app) => (
+                        <Card
+                          key={app.id}
+                          className="bg-white/5 backdrop-blur-lg border-l-4 border-l-blue-400 border border-white/10 hover:bg-white/10 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl"
+                        >
+                          <CardContent className="p-6">
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                              <div className="space-y-3">
+                                <div className="flex items-center gap-4 flex-wrap">
+                                  <h3 className="font-bold text-xl text-white">{app.fullName}</h3>
+                                  <Badge
+                                    className={
+                                      app.status === "Approved"
+                                        ? "bg-green-500/30 text-green-200 border-green-400/30"
+                                        : app.status === "Rejected"
+                                          ? "bg-red-500/30 text-red-200 border-red-400/30"
+                                          : "bg-yellow-500/30 text-yellow-200 border-yellow-400/30"
+                                    }
+                                  >
+                                    {app.status}
+                                  </Badge>
+                                  <Badge
+                                    className={
+                                      app.paymentStatus === "Paid"
+                                        ? "bg-green-500/30 text-green-200 border-green-400/30"
+                                        : "bg-orange-500/30 text-orange-200 border-orange-400/30"
+                                    }
+                                  >
+                                    {app.paymentStatus}
+                                  </Badge>
+                                  <Badge className="bg-blue-500/30 text-blue-200 border-blue-400/30">{app.type}</Badge>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                  <div className="flex items-center gap-2 text-gray-300">
+                                    <Mail className="h-4 w-4 text-gray-400" />
+                                    <span>{app.email}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-gray-300">
+                                    <Phone className="h-4 w-4 text-gray-400" />
+                                    <span>{app.phone}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-gray-300">
+                                    <BookOpen className="h-4 w-4 text-gray-400" />
+                                    <span>{app.course}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-gray-300">
+                                    <Calendar className="h-4 w-4 text-gray-400" />
+                                    <span>
+                                      {app.appliedDate} at {app.appliedTime}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col sm:flex-row gap-3">
                                 <Button
                                   onClick={() => handleApprove(app.id)}
-                                  className="bg-green-600 hover:bg-green-700"
-                                  size="sm"
+                                  disabled={app.status !== "Pending"}
+                                  className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                                 >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  <CheckCircle className="h-4 w-4 mr-2" />
                                   Approve
                                 </Button>
-                                <Button onClick={() => handleReject(app.id)} variant="destructive" size="sm">
-                                  <XCircle className="h-4 w-4 mr-1" />
+                                <Button
+                                  onClick={() => handleReject(app.id)}
+                                  disabled={app.status !== "Pending"}
+                                  variant="destructive"
+                                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" />
                                   Reject
                                 </Button>
+                                <Button
+                                  onClick={() => setSelectedCandidate(app.id)}
+                                  variant="outline"
+                                  className="border-slate-600 text-gray-300 hover:bg-slate-700 hover:text-white transition-all duration-300"
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Timeline
+                                </Button>
                               </div>
-                            )}
-
-                            <div className="flex gap-2">
-                              <Select
-                                value={app.paymentStatus}
-                                onValueChange={(value) => updatePaymentStatus(app.id, value)}
-                              >
-                                <SelectTrigger className="w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Pending">Pending</SelectItem>
-                                  <SelectItem value="Paid">Paid</SelectItem>
-                                  <SelectItem value="Overdue">Overdue</SelectItem>
-                                </SelectContent>
-                              </Select>
-
-                              <Button onClick={() => setSelectedCandidate(app.id)} variant="outline" size="sm">
-                                <Eye className="h-4 w-4 mr-1" />
-                                Timeline
-                              </Button>
                             </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          <TabsContent value="history" className="space-y-6">
-            <Card className="bg-white shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-green-600" />
-                  Approved Candidates History
-                </CardTitle>
-                <CardDescription>Complete action log for all candidates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search by candidate name or course..."
-                        value={historySearchTerm}
-                        onChange={(e) => setHistorySearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
+            <TabsContent value="history" className="space-y-8">
+              <Card className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl border border-slate-700/50 shadow-2xl">
+                <CardHeader className="bg-gradient-to-r from-slate-800/90 to-slate-800/70 rounded-t-2xl border-b border-slate-700/50">
+                  <CardTitle className="flex items-center gap-4 text-white text-2xl font-bold">
+                    <div className="p-3 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl border border-green-500/20">
+                      <Calendar className="h-7 w-7 text-green-400" />
+                    </div>
+                    Approved Candidates History
+                    <Badge className="bg-gradient-to-r from-slate-700 to-slate-600 text-slate-200 border border-slate-600/50 px-3 py-1">
+                      {actionLogs.length} Records
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 text-base mt-2">
+                    Complete action log and timeline for all approved candidates with detailed tracking
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="flex flex-col md:flex-row gap-6 mb-8">
+                    <div className="flex-1">
+                      <div className="relative group">
+                        <Search className="absolute left-4 top-4 h-5 w-5 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
+                        <Input
+                          placeholder="Search by candidate name or course..."
+                          value={historySearchTerm}
+                          onChange={(e) => setHistorySearchTerm(e.target.value)}
+                          className="pl-12 h-14 bg-gradient-to-r from-slate-800/50 to-slate-800/30 backdrop-blur-lg border border-slate-700/50 text-white placeholder:text-slate-400 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 rounded-xl transition-all duration-300"
+                        />
+                      </div>
+                    </div>
+                    <Select value={historyFilterCourse} onValueChange={setHistoryFilterCourse}>
+                      <SelectTrigger className="w-full md:w-64 h-14 bg-gradient-to-r from-slate-800/50 to-slate-800/30 backdrop-blur-lg border border-slate-700/50 text-white rounded-xl">
+                        <SelectValue placeholder="Filter by course" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl">
+                        <SelectItem value="All">All Courses</SelectItem>
+                        <SelectItem value="Computer Basics">Computer Basics</SelectItem>
+                        <SelectItem value="Microsoft Office">Microsoft Office</SelectItem>
+                        <SelectItem value="Graphics Design">Graphics Design</SelectItem>
+                        <SelectItem value="Web Development">Web Development</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={exportToCSV}
+                        className="bg-slate-700 hover:bg-slate-600 text-white shadow-lg transition-all duration-300"
+                        size="sm"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        CSV
+                      </Button>
+                      <Button
+                        onClick={exportToPDF}
+                        className="bg-slate-700 hover:bg-slate-600 text-white shadow-lg transition-all duration-300"
+                        size="sm"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        PDF
+                      </Button>
                     </div>
                   </div>
-                  <Select value={historyFilterCourse} onValueChange={setHistoryFilterCourse}>
-                    <SelectTrigger className="w-full md:w-48">
-                      <SelectValue placeholder="Filter by course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All Courses</SelectItem>
-                      <SelectItem value="Computer Basics">Computer Basics</SelectItem>
-                      <SelectItem value="Microsoft Office">Microsoft Office</SelectItem>
-                      <SelectItem value="Graphics Design">Graphics Design</SelectItem>
-                      <SelectItem value="Web Development">Web Development</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="flex gap-2">
-                    <Button onClick={exportToCSV} variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-1" />
-                      CSV
-                    </Button>
-                    <Button onClick={exportToPDF} variant="outline" size="sm">
-                      <FileText className="h-4 w-4 mr-1" />
-                      PDF
-                    </Button>
-                  </div>
-                </div>
 
-                <div className="space-y-4">
-                  {filteredLogs.map((log) => (
-                    <Card key={log.id} className="border-l-4 border-l-green-500">
-                      <CardContent className="p-4">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                              <h3 className="font-semibold">{log.candidateName}</h3>
-                              <Badge variant="default">{log.action}</Badge>
-                              {log.paymentStatus && (
-                                <Badge variant={log.paymentStatus === "Paid" ? "default" : "outline"}>
-                                  {log.paymentStatus}
+                  <div className="space-y-6">
+                    {filteredLogs.map((log) => (
+                      <Card
+                        key={log.id}
+                        className="bg-slate-800/30 backdrop-blur-lg border-l-4 border-l-green-500 border border-slate-700 hover:bg-slate-800/50 transition-all duration-300"
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-4 flex-wrap">
+                                <h3 className="font-bold text-xl text-white">{log.candidateName}</h3>
+                                <Badge className="bg-green-600/30 text-green-300 border-green-500/30">
+                                  <Award className="h-3 w-3 mr-1" />
+                                  {log.action}
                                 </Badge>
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-600 space-y-1">
-                              <p>
-                                <strong>Course:</strong> {log.serviceOrCourse}
-                              </p>
-                              <p>
-                                <strong>Email:</strong> {log.candidateEmail}
-                              </p>
-                              <p>
-                                <strong>Phone:</strong> {log.candidatePhone}
-                              </p>
-                              <p>
-                                <strong>Action Date:</strong> {log.actionDate} at {log.actionTime}
-                              </p>
-                              <p>
-                                <strong>Details:</strong> {log.details}
-                              </p>
+                                {log.paymentStatus && (
+                                  <Badge
+                                    className={
+                                      log.paymentStatus === "Paid"
+                                        ? "bg-green-600/30 text-green-300 border-green-500/30"
+                                        : "bg-orange-600/30 text-orange-300 border-orange-500/30"
+                                    }
+                                  >
+                                    {log.paymentStatus}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-300 space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <p className="flex items-center gap-2">
+                                  <span className="font-semibold text-green-300">Course:</span>
+                                  <span className="text-gray-200">{log.serviceOrCourse}</span>
+                                </p>
+                                <p className="flex items-center gap-2">
+                                  <span className="font-semibold text-green-300">Email:</span>
+                                  <span className="text-gray-200">{log.candidateEmail}</span>
+                                </p>
+                                <p className="flex items-center gap-2">
+                                  <span className="font-semibold text-green-300">Phone:</span>
+                                  <span className="text-gray-200">{log.candidatePhone}</span>
+                                </p>
+                                <p className="flex items-center gap-2">
+                                  <span className="font-semibold text-green-300">Action Date:</span>
+                                  <span className="text-gray-200">
+                                    {log.actionDate} at {log.actionTime}
+                                  </span>
+                                </p>
+                                <p className="flex items-center gap-2 md:col-span-2">
+                                  <span className="font-semibold text-green-300">Details:</span>
+                                  <span className="text-gray-200">{log.details}</span>
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
-        {/* Timeline Modal */}
-        {selectedCandidate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-              <CardHeader>
-                <CardTitle>Candidate Timeline</CardTitle>
-                <CardDescription>Complete action history for {candidateTimeline[0]?.candidateName}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {candidateTimeline.map((log, index) => (
-                    <div key={log.id} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                        {index < candidateTimeline.length - 1 && <div className="w-px h-16 bg-gray-300 mt-2"></div>}
-                      </div>
-                      <div className="flex-1 pb-8">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline">{log.action}</Badge>
-                          <span className="text-sm text-gray-500">
-                            {log.actionDate} at {log.actionTime}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-700">{log.details}</p>
-                      </div>
+          {selectedCandidate && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+              <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-800/95 to-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-2xl">
+                <CardHeader className="bg-gradient-to-r from-slate-800/90 to-slate-800/70 rounded-t-2xl border-b border-slate-700/50">
+                  <CardTitle className="text-white text-2xl font-bold flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-lg border border-blue-500/20">
+                      <Eye className="h-6 w-6 text-blue-400" />
                     </div>
-                  ))}
-                </div>
-                <div className="flex justify-end mt-6">
-                  <Button onClick={() => setSelectedCandidate(null)} variant="outline">
-                    Close
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                    Candidate Timeline
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 text-base">
+                    Complete action history for {candidateTimeline[0]?.candidateName}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="space-y-8">
+                    {candidateTimeline.map((log, index) => (
+                      <div key={log.id} className="flex gap-6">
+                        <div className="flex flex-col items-center">
+                          <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-green-500 rounded-full shadow-lg border-2 border-slate-700"></div>
+                          {index < candidateTimeline.length - 1 && (
+                            <div className="w-px h-24 bg-gradient-to-b from-slate-600 to-transparent mt-4"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 pb-8">
+                          <div className="flex items-center gap-4 mb-4">
+                            <Badge className="bg-gradient-to-r from-slate-700 to-slate-600 text-slate-200 border border-slate-600/50 px-3 py-1">
+                              {log.action}
+                            </Badge>
+                            <span className="text-sm text-slate-400 font-medium">
+                              {log.actionDate} at {log.actionTime}
+                            </span>
+                          </div>
+                          <p className="text-slate-300 bg-gradient-to-r from-slate-800/60 to-slate-800/40 p-4 rounded-xl border border-slate-700/30">
+                            {log.details}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end mt-8 pt-6 border-t border-slate-700/50">
+                    <Button
+                      onClick={() => setSelectedCandidate(null)}
+                      className="bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 text-white px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
+                    >
+                      Close Timeline
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
