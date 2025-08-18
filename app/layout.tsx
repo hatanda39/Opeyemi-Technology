@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: "Opeyemi Technology, Abeokuta - Computer Services & Training",
     description: "Professional computer services and technology training in Abeokuta, Ogun State",
   },
-    generator: 'v0.dev'
+    generator: 'v0.app'
 }
 
 export default function RootLayout({
