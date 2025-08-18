@@ -7,21 +7,32 @@ import { createClient } from "@/lib/supabase/server"
 export async function signUp(formData: FormData) {
   const supabase = await createClient()
 
-  const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
+  const full_name = formData.get("full_name") as string
+
+  console.log("[v0] Attempting signup for:", email)
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
     options: {
       data: {
-        full_name: formData.get("full_name") as string,
+        full_name,
       },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/auth/callback`,
     },
-  }
-
-  const { error } = await supabase.auth.signUp(data)
+  })
 
   if (error) {
+    console.log("[v0] Signup error:", error.message)
     throw new Error(error.message)
   }
+
+  console.log(
+    "[v0] Signup successful, user needs verification:",
+    data.user?.email_confirmed_at ? "already confirmed" : "needs confirmation",
+  )
 
   revalidatePath("/", "layout")
   redirect("/auth/verify-email")
