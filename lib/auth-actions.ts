@@ -60,7 +60,24 @@ export async function getCurrentUser() {
 
   if (!user) return null
 
-  const { data: profile } = await supabase.from("user_profiles").select("*").eq("id", user.id).single()
+  const { data: profile, error } = await supabase.from("user_profiles").select("*").eq("id", user.id).single()
+
+  // If no profile exists, create one
+  if (error && error.code === "PGRST116") {
+    const newProfile = {
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name || null,
+      phone: null,
+      address: null,
+      role: "user",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+
+    const { data: createdProfile } = await supabase.from("user_profiles").insert(newProfile).select().single()
+    return { ...user, profile: createdProfile }
+  }
 
   return { ...user, profile }
 }
