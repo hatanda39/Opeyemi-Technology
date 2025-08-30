@@ -207,12 +207,6 @@ export default function HomePage() {
             >
               Contact
             </a>
-            <a
-              href="/admin"
-              className="font-bold text-white hover:text-[#00aaff] transition-all duration-300 relative hover:after:w-full after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:bg-[#00aaff] after:w-0 after:transition-all after:duration-300 [&.active]:text-[#00aaff] [&.active]:after:w-full"
-            >
-              Admin
-            </a>
           </nav>
 
           <Button
