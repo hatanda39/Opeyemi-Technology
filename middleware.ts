@@ -2,6 +2,10 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    return NextResponse.next()
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -25,29 +29,10 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  // Refresh session if expired
+  // Refresh session if expired - only for non-admin routes
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
-  // Protect admin routes
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/auth/login"
-      url.searchParams.set("redirectTo", request.nextUrl.pathname)
-      return NextResponse.redirect(url)
-    }
-
-    // Check if user is admin
-    const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
-
-    if (profile?.role !== "admin") {
-      const url = request.nextUrl.clone()
-      url.pathname = "/auth/unauthorized"
-      return NextResponse.redirect(url)
-    }
-  }
 
   return supabaseResponse
 }
