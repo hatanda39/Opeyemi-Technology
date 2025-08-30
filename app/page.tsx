@@ -3,6 +3,7 @@
 import type React from "react"
 import { Download } from "lucide-react"
 import { useState } from "react"
+import { Link } from "next/link"
 import {
   Monitor,
   Wrench,
@@ -213,10 +214,10 @@ export default function HomePage() {
             asChild
             className="bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 hover:scale-105 hover:shadow-lg"
           >
-            <a href="tel:+2348126989184">
-              <Phone className="h-4 w-4 mr-2" />
-              Call Now
-            </a>
+            <Link href="/auth/login">
+              <User className="h-4 w-4 mr-2" />
+              Login
+            </Link>
           </Button>
         </div>
       </header>
