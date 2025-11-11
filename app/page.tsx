@@ -3,7 +3,7 @@
 import type React from "react"
 import { Download } from "lucide-react"
 import { useState } from "react"
-import { Link } from "next/link"
+import Link from "next/link"
 import {
   Monitor,
   Wrench,
