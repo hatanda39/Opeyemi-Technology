@@ -151,7 +151,7 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 transition-all duration-300 transform"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-105 transition-all duration-300 transform bg-transparent"
                 >
                   <Eye className="mr-2 w-5 h-5" />
                   View Portfolio
@@ -296,7 +296,7 @@ export default function LandingPage() {
               <div className="aspect-video relative overflow-hidden">
                 <img
                   src="/images/ecommerce-sample.png"
-                  alt="E-Commerce Platform Sample"
+                  alt="E-Commerce Platform with Multiple Retailers"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent group-hover:from-black/80 transition-all duration-500"></div>
@@ -379,12 +379,12 @@ export default function LandingPage() {
               </CardContent>
             </Card>
 
-            {/* Portfolio Item 3 - Portfolio Website */}
+            {/* Portfolio Item 3 - Restaurant Website (Updated) */}
             <Card className="bg-gray-800/50 border-gray-700 overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/30 group cursor-pointer">
               <div className="aspect-video relative overflow-hidden">
                 <img
-                  src="/images/portfolio-website-sample.png"
-                  alt="Portfolio Website Sample"
+                  src="/images/7793b4efdabee1a94bcfdc213d7912bd.jpg"
+                  alt="Restaurant Website - Pizza & Burger"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent group-hover:from-black/80 transition-all duration-500"></div>
@@ -397,51 +397,7 @@ export default function LandingPage() {
                 </div>
                 <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                   <div className="bg-black/50 backdrop-blur rounded p-2 border border-white/10">
-                    <p className="text-white text-sm font-medium">Creative Portfolio Showcase</p>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-all duration-500"></div>
-              </div>
-              <CardContent className="p-6 group-hover:bg-gray-700/50 transition-colors duration-300">
-                <h3 className="text-white font-semibold mb-2 group-hover:text-blue-300 transition-colors duration-300">
-                  Portfolio Website
-                </h3>
-                <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
-                  Creative portfolio showcase with animations and gallery
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30 hover:scale-105 transition-all duration-300">
-                    Vue.js
-                  </Badge>
-                  <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/30 hover:scale-105 transition-all duration-300">
-                    GSAP
-                  </Badge>
-                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30 hover:scale-105 transition-all duration-300">
-                    CSS3
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Portfolio Item 4 - Restaurant Website */}
-            <Card className="bg-gray-800/50 border-gray-700 overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/30 group cursor-pointer">
-              <div className="aspect-video relative overflow-hidden">
-                <img
-                  src="/images/restaurant-website-sample.png"
-                  alt="Restaurant Website Sample"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent group-hover:from-black/80 transition-all duration-500"></div>
-                <div className="absolute top-4 left-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform -translate-y-2 group-hover:translate-y-0">
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse delay-100"></div>
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse delay-200"></div>
-                  </div>
-                </div>
-                <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="bg-black/50 backdrop-blur rounded p-2 border border-white/10">
-                    <p className="text-white text-sm font-medium">Food Ordering Platform</p>
+                    <p className="text-white text-sm font-medium">Modern Restaurant Site</p>
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-all duration-500"></div>
@@ -451,17 +407,61 @@ export default function LandingPage() {
                   Restaurant Website
                 </h3>
                 <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
-                  Food ordering platform with menu management and reservations
+                  Modern restaurant site with menu showcase and online ordering
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30 hover:scale-105 transition-all duration-300">
+                  <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/30 hover:scale-105 transition-all duration-300">
                     React
                   </Badge>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 hover:scale-105 transition-all duration-300">
-                    Express
+                  <Badge className="bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30 hover:scale-105 transition-all duration-300">
+                    UX Design
                   </Badge>
-                  <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/30 hover:scale-105 transition-all duration-300">
-                    MongoDB
+                  <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/30 hover:scale-105 transition-all duration-300">
+                    Branding
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Portfolio Item 4 - Portfolio Website (Updated) */}
+            <Card className="bg-gray-800/50 border-gray-700 overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/30 group cursor-pointer">
+              <div className="aspect-video relative overflow-hidden">
+                <img
+                  src="/images/portfolio-website-sample.png"
+                  alt="Portfolio Website - Willimes Parker"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent group-hover:from-black/80 transition-all duration-500"></div>
+                <div className="absolute top-4 left-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform -translate-y-2 group-hover:translate-y-0">
+                  <div className="flex space-x-2">
+                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse delay-100"></div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse delay-200"></div>
+                  </div>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="bg-black/50 backdrop-blur rounded p-2 border border-white/10">
+                    <p className="text-white text-sm font-medium">Elegant Portfolio Showcase</p>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-all duration-500"></div>
+              </div>
+              <CardContent className="p-6 group-hover:bg-gray-700/50 transition-colors duration-300">
+                <h3 className="text-white font-semibold mb-2 group-hover:text-blue-300 transition-colors duration-300">
+                  Professional Portfolio
+                </h3>
+                <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
+                  Elegant portfolio website showcasing design and development skills
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30 hover:scale-105 transition-all duration-300">
+                    Vue.js
+                  </Badge>
+                  <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/30 hover:scale-105 transition-all duration-300">
+                    Design
+                  </Badge>
+                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30 hover:scale-105 transition-all duration-300">
+                    Development
                   </Badge>
                 </div>
               </CardContent>
@@ -471,8 +471,8 @@ export default function LandingPage() {
             <Card className="bg-gray-800/50 border-gray-700 overflow-hidden hover:scale-105 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/30 group cursor-pointer">
               <div className="aspect-video relative overflow-hidden">
                 <img
-                  src="/images/saas-dashboard-sample.png"
-                  alt="SaaS Dashboard Sample"
+                  src="/images/saas-dashboard.jpg"
+                  alt="SaaS Dashboard with Analytics and Real-time Data Visualization"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent group-hover:from-black/80 transition-all duration-500"></div>
@@ -495,17 +495,17 @@ export default function LandingPage() {
                   SaaS Dashboard
                 </h3>
                 <p className="text-gray-400 text-sm mb-4 group-hover:text-gray-300 transition-colors duration-300">
-                  Analytics dashboard with real-time data visualization
+                  Analytics dashboard with real-time data visualization and sales metrics
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30 hover:scale-105 transition-all duration-300">
-                    Angular
+                    Analytics
                   </Badge>
                   <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30 hover:scale-105 transition-all duration-300">
-                    D3.js
+                    Dashboard
                   </Badge>
                   <Badge className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 hover:scale-105 transition-all duration-300">
-                    API
+                    Real-time
                   </Badge>
                 </div>
               </CardContent>
@@ -723,7 +723,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
+                className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white bg-transparent"
               >
                 Get Free Quote
               </Button>
